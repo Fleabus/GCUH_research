@@ -6,15 +6,23 @@ import plotly
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 import sys
+import os
+
+#Categories 17
+categories = ['N', 'L', 'R', 'B', 'A', 'a', 'J', 'S', 'V', 'r', 'F', 'e', 'j', 'n', 'E', '/', 'f']
+colours = ['#e6194b	', '#3cb44b', '#ffe119', '#0082c8', '#f58231', '#911eb4', '#46f0f0', '#f032e6'
+            ,'#d2f53c', '#fabebe', '#008080', '#e6beff', '#aa6e28', '#fffac8', '#800000']
 
 #HyperParameters
-SecondsWanted = 600 #Seconds of data wanted
-
-#Global Variables
+signalType = "V1"
 hz = 360
+SecondsWanted = 2500 #Seconds of data wanted
+dynamicPeak = False # If true, the ecg slice will pick based on if the highest or lowest point is greater
+peakSelection = 1 # 1 == pick highest point. -1 == pick lowest point. This only works if dynamic peak is false
+#Global Variables
 signalIndex = 1
-sampSize = int(SecondsWanted*360) #Sets sample size to number of seconds by Hz(360)
-sampIncrement = 1/360
+sampSize = int(SecondsWanted*hz) #Sets sample size to number of seconds by Hz(360)
+sampIncrement = 1/hz
 annotationArray = []
 signalArray = []
 
@@ -24,17 +32,15 @@ def readData(filename):
     global annotationArray
     global signalArray
     #read in data using
-    '''    record = wfdb.rdsamp(filename, sampto = sampSize)
+    '''
+    record = wfdb.rdsamp(filename, sampto = sampSize)
     annotation = wfdb.rdann(filename, 'atr', sampto = sampSize)
-    sig, fields = wfdb.srdsamp(filename, sampto = sampSize)'''
+    sig, fields = wfdb.srdsamp(filename, sampto = sampSize)
+    '''
     record = wfdb.rdsamp(filename)
     annotation = wfdb.rdann(filename, 'atr')
     sig, fields = wfdb.srdsamp(filename)
-    print(annotation.annsamp[0])
-    print(annotation.anntype[0])
-    #read record and signal into an array
-    print("Reading in ", len(sig)/300, " seconds of data")
-    print(fields['signame'])
+    print("\nReading in ", len(sig)/300, "seconds of data from file", filename)
 
     for i in range(0, len(sig)):
         if(i%100 == 0):
@@ -43,15 +49,23 @@ def readData(filename):
 
         signalArray.append(sig[i])
 
+    sys.stdout.write("\rReading Data ... complete!")
+    sys.stdout.flush()
+
     for i in range(1, len(annotation.annsamp)):
         annotationArray.append([annotation.annsamp[i], annotation.anntype[i]])
         if(annotationArray[i-1][1] == 'N' or annotationArray[i-1][1] == '.'):
+            #print(annotation.anntype[i])
             annotationArray[i-1][1] = 0
         elif(annotationArray[i-1][1] == 'A'):
+            #print(annotation.anntype[i])
             annotationArray[i-1][1] = 1
         else:
-            print("Unknown annotation ", annotationArray[i-1][1])
-            annotationArray[i-1][1] = -1
+            x = 1
+            #print("Unknown annotation ", annotationArray[i-1][1])
+            #annotationArray[i-1][1] = -1
+
+
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -89,6 +103,12 @@ def slice_peaks(signals, annotations):
                 peakIndex = minIndex
             else:
                 peakIndex = maxIndex
+            if(dynamicPeak == False):
+                if(peakSelection == 1):
+                    peakIndex = maxIndex
+                if(peakSelection == -1):
+                    peakIndex = minIndex
+
             peakIndex += low
             high = int(peakIndex + hz/2)
             low = int(peakIndex - hz/2)
@@ -102,7 +122,7 @@ def slice_peaks(signals, annotations):
                 if(label == 0):
                     tempLabel = [1, 0] # [normal, abnormal]
                 elif(label == 1):
-                    tempLabel = [0, 1] # [normal, abnormal0]
+                    tempLabel = [0, 1] # [normal, abnormal]
                 else:
                     tempLabel = [0, 0]
                 y.append(tempLabel)
@@ -118,41 +138,74 @@ def plotSignal(features, labels):
     for i in range(len(features)):
         if(labels[i][0] == 1):
             plt.plot(features[i], color="blue",alpha=0.01)
-        elif(labels[i][1] == 1):
-            plt.plot(features[i], color="red", alpha=0.5)
         else:
-            plt.plot(features[i], color="yellow", alpha=0.3)
+            plt.plot(features[i], color="red", alpha=0.01)
+        #else:
+            #plt.plot(features[i], color="yellow", alpha=0.3)
 
 
+# returns the two arrays
+def retrieveData():
+    return signalArray, annotationArray
 
-readData('mitdb/100')   #read data in
-x_norm = []
-y_norm = []
 
-x_abnorm = []
-y_abnorm = []
+def binarySegment(x, y):
+    x_norm = []
+    y_norm = []
+    x_abnorm = []
+    y_abnorm = []
+
+    for i in range(len(x)):
+        x[i] = (x[i] - x[i].min(0)) / x[i].ptp(0)
+        if(y[i][0] == 1):
+            x_norm.append(x[i])
+            y_norm.append(y[i])
+        else:
+            x_abnorm.append(x[i])
+            y_abnorm.append(y[i])
+    x_norm = np.array(x_norm)
+    y_norm = np.array(y_norm)
+    x_abnorm = np.array(x_abnorm)
+    y_abnorm = np.array(y_abnorm)
+    return x_norm, y_norm, x_abnorm, y_abnorm
+
+
+'''
+Retrieves all data based on parameters specified
+params:
+    - sigType = "V1"
+    - directory = "mitdb"
+'''
+def loadAllData(sigType="MLII", directory="mitdb"):
+    signalType = sigType
+    for file in os.listdir(directory):
+        if file.endswith(".dat"):
+            sig, fields = wfdb.srdsamp(directory + "/" + os.path.splitext(file)[0])
+            if(fields['signame'][0] == signalType):
+                signalIndex = 0
+            elif(fields['signame'][1] == signalType):
+                signalIndex = 1
+            readData(directory + '/' + os.path.splitext(file)[0])
+    print("\nTotal signals ", len(signalArray))
+
+
+loadAllData()
 
 x, y = slice_peaks(signalArray, annotationArray)
-#x = (x - x.min(0)) / x.ptp(0)
-
-for i in range(len(x)):
-    x[i] = (x[i] - x[i].min(0)) / x[i].ptp(0)
-    if(y[i][0] == 1):
-        x_norm.append(x[i])
-        y_norm.append(y[i])
-    elif(y[i][1] == 1):
-        x_abnorm.append(x[i])
-        y_abnorm.append(y[i])
-
-x_norm = np.array(x_norm)
-y_norm = np.array(y_norm)
-x_abnorm = np.array(x_abnorm)
-y_abnorm = np.array(y_abnorm)
-
-
-plotSignal(x_norm, y_norm)
-plotSignal(x_abnorm, y_abnorm)
+x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
+#print(len(x_norm))
+#print(len(x_abnorm))
+#norm_mean = x_norm.mean(axis=0)
+#abnorm_mean = x_abnorm[:len(x_norm)].mean(axis=0)
+norm_max = np.amin(x_norm, axis=0)
+abnorm_max = np.amin(x_abnorm, axis=0)
+plt.plot(norm_max, color="blue",alpha=1)
+plt.plot(abnorm_max, color="red",alpha=1)
+#plotSignal(x_norm, y_norm)
+#plotSignal(x_abnorm[:len(x_norm)], y_abnorm[:len(x_norm)])
 plt.show()
+
+'''
 #x = np.load("test_numpy.npy")
 #print(x[0], len(x))
 #correctAnno()           #correct annotations
@@ -161,3 +214,4 @@ plt.show()
 #print(outputArray[:,0][0][0])
 #writeArrayToCSV(outputArray, "100CSV")
 #appendArrayToCSV(outputArray, "100CSV")
+'''
