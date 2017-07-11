@@ -173,7 +173,7 @@ def binarySegment(x, y):
 '''
 Retrieves all data based on parameters specified
 params:
-    - sigType = "V1"
+    - sigType = "MLII"
     - directory = "mitdb"
 '''
 def loadAllData(sigType="MLII", directory="mitdb"):
@@ -188,6 +188,12 @@ def loadAllData(sigType="MLII", directory="mitdb"):
             readData(directory + '/' + os.path.splitext(file)[0])
     print("\nTotal signals ", len(signalArray))
 
+# Retrieve all data from files and return the x and y data
+def loadAndSlice(sigType="MLII", directory="mitdb"):
+    loadAllData(sigType, directory)
+    x, y = slice_peaks(signalArray, annotationArray)
+    return x, y
+
 
 loadAllData()
 
@@ -197,13 +203,16 @@ x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
 #print(len(x_abnorm))
 #norm_mean = x_norm.mean(axis=0)
 #abnorm_mean = x_abnorm[:len(x_norm)].mean(axis=0)
+'''
 norm_max = np.amin(x_norm, axis=0)
 abnorm_max = np.amin(x_abnorm, axis=0)
 plt.plot(norm_max, color="blue",alpha=1)
 plt.plot(abnorm_max, color="red",alpha=1)
+
 #plotSignal(x_norm, y_norm)
 #plotSignal(x_abnorm[:len(x_norm)], y_abnorm[:len(x_norm)])
 plt.show()
+'''
 
 '''
 #x = np.load("test_numpy.npy")
