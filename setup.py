@@ -25,7 +25,7 @@ def setup_data(type):
         data_y = np.load("data/labels_" + type + ".npy")
     except IOError:
         print("Training and testing data of type", type, "does not already exist.")
-        choice = input("Would you like to setup a training and testing set? [Y/n]\n")
+        choice = input("Would you like to load the data into a numpy features a labels set? [Y/n]\n")
         choice = choice_result(choice)
         if(choice):
             data_x, data_y = load_files(type)

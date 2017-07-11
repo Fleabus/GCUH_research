@@ -19,6 +19,9 @@ hz = 360
 SecondsWanted = 2500 #Seconds of data wanted
 dynamicPeak = False # If true, the ecg slice will pick based on if the highest or lowest point is greater
 peakSelection = 1 # 1 == pick highest point. -1 == pick lowest point. This only works if dynamic peak is false
+min_val = -1.5 # Used for normalization
+max_val = 1.5 # Used for normalization
+
 #Global Variables
 signalIndex = 1
 sampSize = int(SecondsWanted*hz) #Sets sample size to number of seconds by Hz(360)
@@ -54,6 +57,10 @@ def readData(filename):
 
     for i in range(1, len(annotation.annsamp)):
         annotationArray.append([annotation.annsamp[i], annotation.anntype[i]])
+
+
+def sort_annotations():
+    for i in range(len(annotationArray)):
         if(annotationArray[i-1][1] == 'N' or annotationArray[i-1][1] == '.'):
             #print(annotation.anntype[i])
             annotationArray[i-1][1] = 0
@@ -61,11 +68,7 @@ def readData(filename):
             #print(annotation.anntype[i])
             annotationArray[i-1][1] = 1
         else:
-            x = 1
-            #print("Unknown annotation ", annotationArray[i-1][1])
-            #annotationArray[i-1][1] = -1
-
-
+            annotationArray[i-1][1] = 1
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -124,7 +127,7 @@ def slice_peaks(signals, annotations):
                 elif(label == 1):
                     tempLabel = [0, 1] # [normal, abnormal]
                 else:
-                    tempLabel = [0, 0]
+                    tempLabel = [0, 1]
                 y.append(tempLabel)
 
         # Assign lists to numpy arrays
@@ -137,9 +140,9 @@ def plotSignal(features, labels):
     plt.style.use('dark_background')
     for i in range(len(features)):
         if(labels[i][0] == 1):
-            plt.plot(features[i], color="blue",alpha=0.01)
+            plt.plot(features[i], color="blue",alpha=0.05)
         else:
-            plt.plot(features[i], color="red", alpha=0.01)
+            plt.plot(features[i], color="red", alpha=0.05)
         #else:
             #plt.plot(features[i], color="yellow", alpha=0.3)
 
@@ -156,7 +159,7 @@ def binarySegment(x, y):
     y_abnorm = []
 
     for i in range(len(x)):
-        x[i] = (x[i] - x[i].min(0)) / x[i].ptp(0)
+        x[i] = (x[i] - (min_val)) / (max_val - (min_val))
         if(y[i][0] == 1):
             x_norm.append(x[i])
             y_norm.append(y[i])
@@ -191,28 +194,37 @@ def loadAllData(sigType="MLII", directory="mitdb"):
 # Retrieve all data from files and return the x and y data
 def loadAndSlice(sigType="MLII", directory="mitdb"):
     loadAllData(sigType, directory)
+    sort_annotations()
     x, y = slice_peaks(signalArray, annotationArray)
     return x, y
 
+
 '''
+
 loadAllData()
 
 x, y = slice_peaks(signalArray, annotationArray)
 x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
+print(len(x_norm))
+print(len(x_abnorm))
+#plotSignal(x_norm[:20], y_norm[:20])
+#plotSignal(x_abnorm[:20], y_abnorm[:20])
+#plt.show()
+
 #print(len(x_norm))
 #print(len(x_abnorm))
 #norm_mean = x_norm.mean(axis=0)
 #abnorm_mean = x_abnorm[:len(x_norm)].mean(axis=0)
 
-norm_max = np.amin(x_norm, axis=0)
-abnorm_max = np.amin(x_abnorm, axis=0)
-plt.plot(norm_max, color="blue",alpha=1)
-plt.plot(abnorm_max, color="red",alpha=1)
+#norm_max = np.amin(x_norm, axis=0)
+#abnorm_max = np.amin(x_abnorm, axis=0)
+#plt.plot(norm_max, color="blue",alpha=1)
+#plt.plot(abnorm_max, color="red",alpha=1)
+
 
 #plotSignal(x_norm, y_norm)
 #plotSignal(x_abnorm[:len(x_norm)], y_abnorm[:len(x_norm)])
-plt.show()
-'''
+
 
 '''
 #x = np.load("test_numpy.npy")
@@ -223,4 +235,3 @@ plt.show()
 #print(outputArray[:,0][0][0])
 #writeArrayToCSV(outputArray, "100CSV")
 #appendArrayToCSV(outputArray, "100CSV")
-'''
