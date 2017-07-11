@@ -194,7 +194,7 @@ def loadAndSlice(sigType="MLII", directory="mitdb"):
     x, y = slice_peaks(signalArray, annotationArray)
     return x, y
 
-
+'''
 loadAllData()
 
 x, y = slice_peaks(signalArray, annotationArray)
@@ -203,7 +203,7 @@ x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
 #print(len(x_abnorm))
 #norm_mean = x_norm.mean(axis=0)
 #abnorm_mean = x_abnorm[:len(x_norm)].mean(axis=0)
-'''
+
 norm_max = np.amin(x_norm, axis=0)
 abnorm_max = np.amin(x_abnorm, axis=0)
 plt.plot(norm_max, color="blue",alpha=1)
