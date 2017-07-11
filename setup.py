@@ -35,5 +35,5 @@ def setup_data(type):
     finally:
         print("Returning data...")
         data_formatter = Data_Formatter()
-        data_formatter.assignData(data_x, data_y)
+        data_formatter.assign_data(data_x, data_y)
         return data_formatter

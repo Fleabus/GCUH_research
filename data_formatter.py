@@ -1,9 +1,12 @@
 import numpy as np
+from sklearn.cross_validation import train_test_split
 
 class Data_Formatter:
     x, y = [], []
+    x_train, y_train = [], []
+    x_test, y_test = [], []
 
-    def assignData(self, x_data, y_data):
+    def assign_data(self, x_data, y_data):
         self.x = x_data
         self.y = y_data
 
@@ -47,6 +50,23 @@ class Data_Formatter:
         '''
         self.x = np.concatenate((self.x[0], self.x[1]), axis=0)
         self.y = np.concatenate((self.y[0], self.y[1]), axis=0)
+
+    # Splits the dataset based on the testing percentage input
+    def split_training_testing(self, testing_percent=0.3):
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=testing_percent, random_state=42)
+
+    # returns x and y batch
+    def get_batch(self, batch_size, iterator = 0, type="train"):
+        if(type == "train"):
+            if(batch_size*iterator > len(self.x_train)):
+                print("Batch index out of range", batch_size*iterator, len(x))
+                return np.array([]), np.array([])
+            return self.x_train[batch_size*iterator:batch_size*iterator + batch_size], self.y_train[batch_size*iterator:batch_size*iterator + batch_size]
+        elif(type == "test"):
+            if(batch_size*iterator > len(self.x_test)):
+                print("Batch index out of range", batch_size*iterator, len(x))
+                return np.array([]), np.array([])
+            return self.x_test[batch_size*iterator:batch_size*iterator + batch_size], self.y_test[batch_size*iterator:batch_size*iterator + batch_size]
 
     def counter(self):
         normal_counter = 0
