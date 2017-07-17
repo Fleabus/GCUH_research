@@ -9,8 +9,8 @@ if __name__ == "__main__":
     data_formatter.equalize_data()
     data_formatter.split_training_testing(0.3)
 
-    '''
-    rnn = RNN(data_formatter)
+    rnn = RNN(data_formatter, learning_rate=0.5, epochs=1000,
+                learning_rate_reduction=0.5, reduction_index=1,
+                batch_size=240)
     rnn.setup()
     rnn.train()
-    '''
