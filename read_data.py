@@ -19,8 +19,8 @@ hz = 360
 SecondsWanted = 2500 #Seconds of data wanted
 dynamicPeak = False # If true, the ecg slice will pick based on if the highest or lowest point is greater
 peakSelection = 1 # 1 == pick highest point. -1 == pick lowest point. This only works if dynamic peak is false
-min_val = -1.5 # Used for normalization
-max_val = 1.5 # Used for normalization
+min_val = -1 # Used for normalization
+max_val = 1 # Used for normalization
 
 #Global Variables
 signalIndex = 1
@@ -61,6 +61,7 @@ def readData(filename):
 
 def sort_annotations():
     for i in range(len(annotationArray)):
+
         if(annotationArray[i-1][1] == 'N' or annotationArray[i-1][1] == '.'):
             #print(annotation.anntype[i])
             annotationArray[i-1][1] = 0
@@ -140,9 +141,9 @@ def plotSignal(features, labels):
     plt.style.use('dark_background')
     for i in range(len(features)):
         if(labels[i][0] == 1):
-            plt.plot(features[i], color="blue",alpha=0.05)
+            plt.plot(features[i], color="blue",alpha=0.5)
         else:
-            plt.plot(features[i], color="red", alpha=0.05)
+            plt.plot(features[i], color="red", alpha=0.5)
         #else:
             #plt.plot(features[i], color="yellow", alpha=0.3)
 
@@ -159,6 +160,8 @@ def binarySegment(x, y):
     y_abnorm = []
 
     for i in range(len(x)):
+        x_mean = np.mean(x[i])
+        x[i] = x[i] - x_mean
         x[i] = (x[i] - (min_val)) / (max_val - (min_val))
         if(y[i][0] == 1):
             x_norm.append(x[i])
@@ -198,7 +201,14 @@ def loadAndSlice(sigType="MLII", directory="mitdb"):
     x, y = slice_peaks(signalArray, annotationArray)
     return x, y
 
-
+if __name__ == '__main__':
+    x, y = loadAndSlice()
+    x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
+    print(len(x_norm))
+    print(len(x_abnorm))
+    plotSignal(x_norm[:5], y_norm[:5])
+    plotSignal(x_abnorm[:5], y_abnorm[:5])
+    plt.show()
 '''
 
 loadAllData()
