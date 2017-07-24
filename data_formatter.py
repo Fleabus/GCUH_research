@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 class Data_Formatter:
     x, y = [], []
@@ -51,6 +52,16 @@ class Data_Formatter:
         self.x = np.concatenate((self.x[0], self.x[1]), axis=0)
         self.y = np.concatenate((self.y[0], self.y[1]), axis=0)
 
+    def average_in_window(self, window_size, stride=0):
+        new_x = []
+        for x_val in self.x:
+            new_x_val = []
+            for i in range(len(x_val)-window_size):
+                windowed_list = x_val[i:i+window_size]
+                new_x_val.append(sum(windowed_list) / float(len(windowed_list)))
+            new_x.append(new_x_val)
+        self.x = new_x
+
     # Splits the dataset based on the testing percentage input
     def split_training_testing(self, testing_percent=0.3):
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=testing_percent, random_state=42)
@@ -67,6 +78,18 @@ class Data_Formatter:
                 print("Batch index out of range", batch_size*iterator, len(x))
                 return np.array([]), np.array([])
             return self.x_test[batch_size*iterator:batch_size*iterator + batch_size], self.y_test[batch_size*iterator:batch_size*iterator + batch_size]
+
+    def split_into_chunks(self, data, size):
+        n = max(data, size)
+        return (data[i:i+size] for i in xrange(0, len(data), size))
+
+    def plot_accuracy(self,features, labels):
+        plt.style.use('dark_background')
+        for i in range(len(features)):
+            if(labels[i]== True):
+                plt.plot(features[i], color="green",alpha=0.1)
+            else:
+                plt.plot(features[i], color="red", alpha=0.1)
 
     def counter(self):
         normal_counter = 0

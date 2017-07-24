@@ -9,7 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 class RNN:
 	n_input = 1
 	n_step = 360
-	n_state = 124
+	n_state = 400
 	n_output = 2
 
 
@@ -29,13 +29,15 @@ class RNN:
 
 	def setup(self, sess):
 		self.sess = sess
-		self.w1 = tf.Variable(tf.truncated_normal([self.n_state, 2], stddev=0.1))
-		self.b1 = tf.constant(0.1, shape=[2])
+		self.w1 = tf.Variable(tf.truncated_normal([self.n_state, 500], stddev=0.1))
+		self.b1 = tf.constant(0.1, shape=[500])
+		self.w2 = tf.Variable(tf.truncated_normal([500, 2], stddev=0.1))
+		self.b2 = tf.constant(0.1, shape=[2])
 		self.x = tf.placeholder("float", [None, self.n_step, self.n_input])
 		self.y = tf.placeholder("float", [None, self.n_output])
 		self.output = self.feed_forward(self.x)
 		self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.y))
-		self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
+		self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
 		self.correct_pred = tf.equal(tf.argmax(self.output,1), tf.argmax(self.y,1))
 		self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
 
@@ -63,8 +65,11 @@ class RNN:
 		out = tf.nn.sigmoid(fc2_result)
 		'''
 		lstm_cell = rnn.BasicLSTMCell(self.n_state, state_is_tuple=True)
-		outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
-		output = tf.matmul(outputs[-1],self.w1) + self.b1
+		outputs, states = tf.nn.static_rnn(lstm_cell, x, dtype=tf.float32)
+		h1_out = tf.matmul(tf.nn.tanh(outputs[-1]),self.w1) + self.b1
+		h1 = tf.nn.tanh(h1_out)
+		h2_out = tf.matmul(h1, self.w2) + self.b2
+		output = tf.nn.tanh(h2_out)
 		# Return final output
 		return output
 

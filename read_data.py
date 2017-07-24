@@ -69,7 +69,7 @@ def sort_annotations():
             #print(annotation.anntype[i])
             annotationArray[i-1][1] = 1
         else:
-            annotationArray[i-1][1] = 1
+            annotationArray[i-1][1] = -1
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -120,6 +120,8 @@ def slice_peaks(signals, annotations):
                 assign = False
             if(low < 0):
                 assign = False
+            if(label == -1):
+                assign = False
             if assign:
                 signalRange = signals[low:high]
                 x.append([i[signalIndex] for i in signalRange])
@@ -160,9 +162,9 @@ def binarySegment(x, y):
     y_abnorm = []
 
     for i in range(len(x)):
-        x_mean = np.mean(x[i])
-        x[i] = x[i] - x_mean
-        x[i] = (x[i] - (min_val)) / (max_val - (min_val))
+        #x_mean = np.mean(x[i])
+        #x[i] = x[i] - x_mean
+        #x[i] = (x[i] - (min_val)) / (max_val - (min_val))
         if(y[i][0] == 1):
             x_norm.append(x[i])
             y_norm.append(y[i])
@@ -174,6 +176,18 @@ def binarySegment(x, y):
     x_abnorm = np.array(x_abnorm)
     y_abnorm = np.array(y_abnorm)
     return x_norm, y_norm, x_abnorm, y_abnorm
+
+def calculateDeltaChange(data):
+    new_data = []
+    for x in data:
+        new_snippet = []
+        for i in range(len(x)):
+            if i == 0:
+                new_snippet.append(0)
+            else:
+                new_snippet.append(x[i-1]-x[i])
+        new_data.append(new_snippet)
+    return np.array(new_data)
 
 
 '''
@@ -203,6 +217,7 @@ def loadAndSlice(sigType="MLII", directory="mitdb"):
 
 if __name__ == '__main__':
     x, y = loadAndSlice()
+    x = calculateDeltaChange(x)
     x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
     print(len(x_norm))
     print(len(x_abnorm))
