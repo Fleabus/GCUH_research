@@ -18,7 +18,9 @@ def load_files(type):
     x, y = loadAndSlice(type, "mitdb")
     return x, y
 
-def setup_data(type):
+def setup_data():
+    data_type = input("What lead? (e.g. MLII, V1, V2...):\n")
+    type = data_type.upper()
     data_x, data_y = [], []
     try:
         data_x = np.load("data/features_" + type + ".npy")

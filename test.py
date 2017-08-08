@@ -1,8 +1,9 @@
 import numpy as np
 
-arr = np.array([1, 2, 1.5, 3])
+def get_heatmap_values(x):
+    y = [n[0] - n[1] for n in x]
+    normalize = [(n - (-1)) / (1 - (-1)) for n in y]
+    return normalize
 
-mean = np.mean(arr)
-
-new_arr = arr - mean
-print(new_arr)
+x = np.array([[0.2, 0.9], [0.9, 0.2]])
+print(get_heatmap_values(x))
