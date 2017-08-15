@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 class Data_Formatter:
     x, y = [], []
     x_train, y_train = [], []
+
     x_test, y_test = [], []
 
     def assign_data(self, x_data, y_data):
@@ -144,6 +145,17 @@ class Data_Formatter:
 
     def normalize(self, min, max):
         self.x = (self.x-min)/(max-min)
+
+    #Counts number of normal and abnormal and returns
+    def countType(arr):
+        countNorm = 0
+        countAb = 0
+        for i in range(0, len(arr)):
+            if(arr[i][0] == 1.0):
+                countNorm += 1
+            else:
+                countAb += 1
+        return countNorm, countAb
 
     # Generates a random amount of noise
     # scale = the deviation from the original

@@ -8,8 +8,55 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print("Importing Data")
 signals, labels = [], []
-signals = np.load("data/features_MLII.npy")
-labels = np.load("data/labels_MLII.npy")
+signal = np.load("data/features_MLII.npy")
+label = np.load("data/labels_MLII.npy")
+
+def checkLabels():
+    countNorm = 0
+    countAb = 0
+    newLabels = []
+    newSignals = []
+    for i in range(0, len(label)):
+        if(label[i][0] == 1.0):
+            countNorm += 1
+        else:
+            countAb += 1
+            newLabels.append(label[i])
+            newSignals.append(signal[i])
+    print("Normal: ", countNorm)
+    print("Abnormal: ", countAb)
+    cN = 0
+    for i in range(0, len(label)):
+        if(label[i][0] == 1.0 and cN < countAb):
+            newLabels.append(label[i])
+            newSignals.append(signal[i])
+            cN += 1
+    print("S, L: ", len(newSignals), len(newLabels))
+    return newLabels, newSignals
+
+def countType(arr):
+    countNorm = 0
+    countAb = 0
+    for i in range(0, len(arr)):
+        if(arr[i][0] == 1.0):
+            countNorm += 1
+        else:
+            countAb += 1
+    return countNorm, countAb
+
+def getSome(number):
+    la = []
+    sa = []
+    la = label[0:number]
+    sa = signal[0:number]
+    return la, sa
+
+labels, signals = checkLabels()
+#labels, signals = getSome(5000)
+print(countType(labels))
+print("S, L: ", len(labels), len(signals))
+
+
 
 def createBatch(signals, labels, noBatch):
     allSignals = np.array_split(signals, noBatch)
@@ -52,7 +99,7 @@ with tf.name_scope("Input"):
     x = tf.placeholder(tf.float32, [None, 360]) #Creates an input placeholder with input of 360 (signal length as 1d Array)
     y_ = tf.placeholder(tf.float32, [None, 2]) #Placeholder for inputing correct answers
 
-x_image = tf.reshape(x, [-1, 1, 360, 1])
+    x_image = tf.reshape(x, [-1, 1, 360, 1])
 
 with tf.name_scope("ConvLayer1"):
     W_conv1 = weight_variable([1, 5, 1, 32])
@@ -63,9 +110,9 @@ with tf.name_scope("ConvLayer1"):
 
 print(h_pool1.get_shape())
 with tf.name_scope("FCLayer1"):
-    W_fc1 = weight_variable([1 * 180 * 8, 1024])
+    W_fc1 = weight_variable([1 * 180 * 32, 1024])
     b_fc1 = bias_variable([1024])
-    h_pool1_flat = tf.reshape(h_pool1, [-1, 1*180*8])
+    h_pool1_flat = tf.reshape(h_pool1, [-1, 1*180*32])
     print(h_pool1_flat.get_shape())
     h_fc1 = tf.nn.relu(tf.matmul(h_pool1_flat, W_fc1) + b_fc1)
 
@@ -88,7 +135,7 @@ with tf.name_scope("evaluation"):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     tf.summary.scalar("cost", cross_entropy)
     tf.summary.scalar("accuracy", accuracy)
-'''
+
 #Run Session
 sess = tf.Session()
 init = tf.global_variables_initializer()
@@ -110,4 +157,3 @@ for i in range(0, len(signalTrainSet)):
     print("Batch ", i, " accuracy: ", acc)
     train_writer.add_summary(summary, i)
 train_writer.close()
-'''

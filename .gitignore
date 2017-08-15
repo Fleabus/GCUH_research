@@ -4,5 +4,6 @@ tensorboard/*
 ecgoutput/*
 SAH/*
 allECGS/*
+formatted/*
 test_numpy.npy
 allECGs.zip

@@ -3,13 +3,39 @@ import os
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
+import random
 now = datetime.now()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print("Importing Data")
 signals, labels = [], []
-signals = np.load("data/features_MLII.npy")
-labels = np.load("data/labels_MLII.npy")
+signal = np.load("data/features_MLII.npy")
+label = np.load("data/labels_MLII.npy")
+
+def checkLabels():
+    countNorm = 0
+    countAb = 0
+    newLabels = []
+    newSignals = []
+    for i in range(0, len(label)):
+        if(label[i][0] == 1.0):
+            countNorm += 1
+        else:
+            countAb += 1
+            newLabels.append(label[i])
+            newSignals.append(signal[i])
+    print("Normal: ", countNorm)
+    print("Abnormal: ", countAb)
+    cN = 0
+    for i in range(0, len(label)):
+        if(label[i][0] == 1.0 and cN < countAb):
+            newLabels.append(label[i])
+            newSignals.append(signal[i])
+            cN += 1
+    return newLabels, newSignals
+
+labels, signals = checkLabels()
+
 
 def createBatch(signals, labels, noBatch):
     allSignals = np.array_split(signals, noBatch)
