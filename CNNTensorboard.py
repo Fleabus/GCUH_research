@@ -1,4 +1,4 @@
-#BASIC NN
+#BASIC CNN - Aidan
 import os
 import tensorflow as tf
 import numpy as np
@@ -8,10 +8,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print("Importing Data")
 signals, labels = [], []
-signal = np.load("data/features_MLII.npy")
-label = np.load("data/labels_MLII.npy")
+signals = np.load("data/features_MLII.npy")
+labels = np.load("data/labels_MLII.npy")
 
-def checkLabels():
+def checkLabels(label, signal):
     countNorm = 0
     countAb = 0
     newLabels = []
@@ -51,7 +51,7 @@ def getSome(number):
     sa = signal[0:number]
     return la, sa
 
-labels, signals = checkLabels()
+labels, signals = checkLabels(labels, signals)
 #labels, signals = getSome(5000)
 print(countType(labels))
 print("S, L: ", len(labels), len(signals))
@@ -68,8 +68,8 @@ def splitTestTrainSets(testPercentage):
     trainNo = 100 - testNo
 
     #spliting array evenly by 100
-    splitSignalArr = np.array_split(signals, 100)
-    splitLabelArr = np.array_split(labels, 100)
+    splitSignalArr = np.array_split(signals, 10)
+    splitLabelArr = np.array_split(labels, 10)
 
     #Seperating training and testing set
     signalTrainSet = np.concatenate(splitSignalArr[:trainNo])

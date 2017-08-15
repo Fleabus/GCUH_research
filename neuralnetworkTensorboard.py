@@ -1,4 +1,4 @@
-#BASIC NN
+#BASIC NN with Tensorboard - Aidan
 import os
 import tensorflow as tf
 import numpy as np

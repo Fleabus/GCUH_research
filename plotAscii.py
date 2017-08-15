@@ -1,4 +1,4 @@
-#File to detect RR Interval in ascii data and output to image
+#File to detect RR Interval in ascii data and output to image - Aidan
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np

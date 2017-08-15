@@ -1,4 +1,4 @@
-#class (continuousStreamArray, batch size, step)
+#class (continuousStreamArray, batch size, step) - Aidan playing around with OO
 #class for heatmap
 
 class Datastream:
