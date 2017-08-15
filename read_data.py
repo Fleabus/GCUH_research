@@ -17,7 +17,7 @@ colours = ['#3cb44b', '#e6194b', '#ffe119', '#0082c8', '#f58231', '#911eb4', '#4
 
 #HyperParameters
 signalType = "V1"
-hz = 900
+hz = 360
 downsample = 300
 SecondsWanted = 2500 #Seconds of data wanted
 dynamicPeak = False # If true, the ecg slice will pick based on if the highest or lowest point is greater
@@ -53,8 +53,7 @@ def readData(filename):
         if(i%100 == 0):
             sys.stdout.write("\rReading Data ... {0:.2f}%".format((float(i)/len(sig))*100))
             sys.stdout.flush()
-        if(i % 6 != 0):
-            signalArray.append(sig[i])
+        signalArray.append(sig[i])
 
     sys.stdout.write("\rReading Data ... complete!")
     sys.stdout.flush()
@@ -68,7 +67,8 @@ def sort_annotations():
         try:
             annotationArray[i-1][1] = np.identity(len(categories))[categories.index(annotationArray[i-1][1])]
         except ValueError:
-            annotationArray[i-1][1] = np.identity(len(categories))[len(categories)-1]
+            # if annotation isn't in the accepted categories
+            annotationArray[i-1][1] = [-1]
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -136,8 +136,8 @@ def slice_peaks(signals, annotations):
 def plotSignal(features, labels, alpha_value=0.5):
     plt.style.use('dark_background')
     for i in range(len(features)):
-        plt.scatter(range(len(features[i])), features[i],c=range(len(features[i])), marker='_', s=1)
-        #plt.plot(features[i], color=colours[np.argmax(labels[i])], alpha=alpha_value)
+        #plt.scatter(range(len(features[i])), features[i],c=range(len(features[i])), marker='_', s=1)
+        plt.plot(features[i], color=colours[np.argmax(labels[i])], alpha=alpha_value)
 
 
 # returns the two arrays
@@ -152,9 +152,6 @@ def binarySegment(x, y):
     y_abnorm = []
 
     for i in range(len(x)):
-        #x_mean = np.mean(x[i])
-        #x[i] = x[i] - x_mean
-        x[i] = (x[i] - (min_val)) / (max_val - (min_val))
         if(y[i][0] == 1):
             x_norm.append(x[i])
             y_norm.append(y[i])
@@ -208,16 +205,18 @@ def loadAndSlice(sigType="MLII", directory="mitdb"):
 if __name__ == '__main__':
     ps = []
     x, y = loadAndSlice()
-    z = np.random.uniform(0,1,len(x[1]))
-    plot_signal(range(len(x[1])), x[1], z)
-    plt.show()
-    '''
+    #z = np.random.uniform(0,1,len(x[1]))
+    #plot_signal(range(len(x[1])), x[1], z)
+    #plt.show()
+    x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
+    print(len(x_norm))
+    print(len(x_abnorm))
     for i in range(len(categories)):
         ps.append(mpatches.Patch(color=colours[i], label=categories[i]))
-        plotSignal([x[j] for j in range(len(x)) if y[j][i] == 1][:1], [n for n in y if n[i] == 1][:1], alpha_value=1)
+        plotSignal([x[j] for j in range(len(x)) if y[j][i] == 1][:30], [n for n in y if n[i] == 1][:30], alpha_value=0.7)
     plt.legend(handles=ps)
     plt.show()
-    '''
+
 '''
 
 loadAllData()

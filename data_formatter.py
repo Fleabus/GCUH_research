@@ -52,6 +52,40 @@ class Data_Formatter:
         self.x = np.hstack(np.reshape(self.x, [1, self.x.shape[0]*self.x.shape[1], self.x.shape[2]]))
         self.y = np.hstack(np.reshape(self.y, [1, self.y.shape[0]*self.y.shape[1], self.y.shape[2]]))
 
+    # Ensures all classifications are of equal length
+    def equalize_data_old(self):
+        x_values = []
+        y_values = []
+        classifications = len(self.y[0])
+        # Create 2D array consisting of all classifications
+        # e.g. 2 classifications = [[list1], [list2]]
+        for _ in range(classifications):
+            x_values.append([])
+            y_values.append([])
+        # Cycle through array and assign each to appropriate list
+        for i in range(len(self.x)):
+            index_point = np.argmax(self.y[i])
+            x_values[index_point].append(self.x[i])
+            y_values[index_point].append(self.y[i])
+        self.x = []
+        self.y = []
+        # Find the minimum amount of data points in a category
+        minAmount = -1
+        for i in range(classifications):
+            if(len(x_values[i]) < minAmount or minAmount == -1):
+                minAmount = len(x_values[i])
+        # Cycle through all classifications and reduce to minAmount
+        self.x = x_values[0:classifications][0:minAmount]
+        self.y = y_values[0:classifications][0:minAmount]
+        # Assign back to numpy arrays for processing
+        self.x = np.array(self.x)
+        self.y = np.array(self.y)
+        # Reshape into standard format [total, steps]
+        '''
+        This currently does not support more than 2 classifications
+        '''
+        self.x = np.concatenate((self.x[0], self.x[1]), axis=0)
+        self.y = np.concatenate((self.y[0], self.y[1]), axis=0)
 
     def average_in_window(self, window_size, stride=0):
         new_x = []
@@ -65,7 +99,7 @@ class Data_Formatter:
 
     # Splits the dataset based on the testing percentage input
     def split_training_testing(self, testing_percent=0.3):
-        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=testing_percent, random_state=42)
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=testing_percent)
 
     # returns x and y batch
     def get_batch(self, batch_size, iterator = 0, type="train"):
@@ -102,6 +136,14 @@ class Data_Formatter:
                 abnormal_counter = abnormal_counter + 1
         print(normal_counter)
         print(abnormal_counter)
+
+    # Centers data vertically using the mean
+    def center_vertical(self):
+        x_mean = np.mean(self.x, axis=1)
+        self.x = self.x - x_mean
+
+    def normalize(self, min, max):
+        self.x = (self.x-min)/(max-min)
 
     # Generates a random amount of noise
     # scale = the deviation from the original
