@@ -5,22 +5,26 @@ import plotly.plotly as py
 import plotly
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import sys
 import os
+from plot_signal import plot_signal
 
 #Categories 17
-categories = ['N', 'L', 'R', 'B', 'A', 'a', 'J', 'S', 'V', 'r', 'F', 'e', 'j', 'n', 'E', '/', 'f']
-colours = ['#e6194b	', '#3cb44b', '#ffe119', '#0082c8', '#f58231', '#911eb4', '#46f0f0', '#f032e6'
+categories = ['N','A']
+colours = ['#3cb44b', '#e6194b', '#ffe119', '#0082c8', '#f58231', '#911eb4', '#46f0f0', '#f032e6'
             ,'#d2f53c', '#fabebe', '#008080', '#e6beff', '#aa6e28', '#fffac8', '#800000']
 
 #HyperParameters
 signalType = "V1"
 hz = 360
+downsample = 300
 SecondsWanted = 2500 #Seconds of data wanted
 dynamicPeak = False # If true, the ecg slice will pick based on if the highest or lowest point is greater
 peakSelection = 1 # 1 == pick highest point. -1 == pick lowest point. This only works if dynamic peak is false
-min_val = -1.5 # Used for normalization
-max_val = 1.5 # Used for normalization
+min_val = -1 # Used for normalization
+max_val = 1 # Used for normalization
+offsetMax = 0 # Used for shifting the data
 
 #Global Variables
 signalIndex = 1
@@ -49,7 +53,6 @@ def readData(filename):
         if(i%100 == 0):
             sys.stdout.write("\rReading Data ... {0:.2f}%".format((float(i)/len(sig))*100))
             sys.stdout.flush()
-
         signalArray.append(sig[i])
 
     sys.stdout.write("\rReading Data ... complete!")
@@ -61,14 +64,11 @@ def readData(filename):
 
 def sort_annotations():
     for i in range(len(annotationArray)):
-        if(annotationArray[i-1][1] == 'N' or annotationArray[i-1][1] == '.'):
-            #print(annotation.anntype[i])
-            annotationArray[i-1][1] = 0
-        elif(annotationArray[i-1][1] == 'A'):
-            #print(annotation.anntype[i])
-            annotationArray[i-1][1] = 1
-        else:
-            annotationArray[i-1][1] = 1
+        try:
+            annotationArray[i-1][1] = np.identity(len(categories))[categories.index(annotationArray[i-1][1])]
+        except ValueError:
+            # if annotation isn't in the accepted categories
+            annotationArray[i-1][1] = [-1]
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -115,20 +115,17 @@ def slice_peaks(signals, annotations):
             peakIndex += low
             high = int(peakIndex + hz/2)
             low = int(peakIndex - hz/2)
-            if(high > len(signals)):
+
+            if(high+offsetMax > len(signals)):
                 assign = False
-            if(low < 0):
+            if(low-offsetMax < 0):
+                assign = False
+            if(label[0] == -1):
                 assign = False
             if assign:
                 signalRange = signals[low:high]
                 x.append([i[signalIndex] for i in signalRange])
-                if(label == 0):
-                    tempLabel = [1, 0] # [normal, abnormal]
-                elif(label == 1):
-                    tempLabel = [0, 1] # [normal, abnormal]
-                else:
-                    tempLabel = [0, 1]
-                y.append(tempLabel)
+                y.append(label)
 
         # Assign lists to numpy arrays
         x = np.array(x)
@@ -136,15 +133,11 @@ def slice_peaks(signals, annotations):
         return x, y
 
 
-def plotSignal(features, labels):
+def plotSignal(features, labels, alpha_value=0.5):
     plt.style.use('dark_background')
     for i in range(len(features)):
-        if(labels[i][0] == 1):
-            plt.plot(features[i], color="blue",alpha=0.05)
-        else:
-            plt.plot(features[i], color="red", alpha=0.05)
-        #else:
-            #plt.plot(features[i], color="yellow", alpha=0.3)
+        #plt.scatter(range(len(features[i])), features[i],c=range(len(features[i])), marker='_', s=1)
+        plt.plot(features[i], color=colours[np.argmax(labels[i])], alpha=alpha_value)
 
 
 # returns the two arrays
@@ -159,7 +152,6 @@ def binarySegment(x, y):
     y_abnorm = []
 
     for i in range(len(x)):
-        x[i] = (x[i] - (min_val)) / (max_val - (min_val))
         if(y[i][0] == 1):
             x_norm.append(x[i])
             y_norm.append(y[i])
@@ -171,6 +163,18 @@ def binarySegment(x, y):
     x_abnorm = np.array(x_abnorm)
     y_abnorm = np.array(y_abnorm)
     return x_norm, y_norm, x_abnorm, y_abnorm
+
+def calculateDeltaChange(data):
+    new_data = []
+    for x in data:
+        new_snippet = []
+        for i in range(len(x)):
+            if i == 0:
+                new_snippet.append(0)
+            else:
+                new_snippet.append(x[i-1]-x[i])
+        new_data.append(new_snippet)
+    return np.array(new_data)
 
 
 '''
@@ -198,6 +202,20 @@ def loadAndSlice(sigType="MLII", directory="mitdb"):
     x, y = slice_peaks(signalArray, annotationArray)
     return x, y
 
+if __name__ == '__main__':
+    ps = []
+    x, y = loadAndSlice()
+    #z = np.random.uniform(0,1,len(x[1]))
+    #plot_signal(range(len(x[1])), x[1], z)
+    #plt.show()
+    x_norm, y_norm, x_abnorm, y_abnorm = binarySegment(x, y)
+    print(len(x_norm))
+    print(len(x_abnorm))
+    for i in range(len(categories)):
+        ps.append(mpatches.Patch(color=colours[i], label=categories[i]))
+        plotSignal([x[j] for j in range(len(x)) if y[j][i] == 1][:30], [n for n in y if n[i] == 1][:30], alpha_value=0.7)
+    plt.legend(handles=ps)
+    plt.show()
 
 '''
 
