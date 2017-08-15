@@ -1,4 +1,8 @@
 data/*
 mitdb/*
-formatted/*
-unlabelled/*
+tensorboard/*
+ecgoutput/*
+SAH/*
+allECGS/*
+test_numpy.npy
+allECGs.zip
