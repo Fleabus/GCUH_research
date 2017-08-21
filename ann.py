@@ -19,7 +19,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 data_formatter = Data_Formatter()
 data_formatter.load_formatted_data("900_no_noise_binary_equalize")
 #data_formatter.shuffle()
-#data_formatter.normalize(-1.5, 1.5)
+data_formatter.normalize(-1.5, 1.5)
 #data_formatter.center_vertical()
 data_formatter.split_training_testing(0.3)
 print(len(data_formatter.x_test))
@@ -36,10 +36,10 @@ epochs = 50000
 batch_size = 100
 
 #hyperparameters
-lr = 1
+lr = 0.01
 
 # placholders
-x = tf.placeholder('float', [None, features])
+x = tf.placeholder('float', [None, features], name="x")
 y = tf.placeholder('float', [None, output_nodes])
 
 # return an object with weights and biases
@@ -69,6 +69,8 @@ def network_setup(x):
 
 def train_network(x):
     prediction = network_setup(x)
+    run = tf.nn.relu(prediction, name="run")
+    saver = tf.train.Saver()
     with tf.name_scope("Optimization"):
         cost = tf.reduce_mean( tf.squared_difference(y, prediction))
         optimizer = tf.train.AdamOptimizer().minimize(cost)
@@ -98,5 +100,6 @@ def train_network(x):
                     epoch_x, epoch_y = data_formatter.get_batch(batch_size, i, "train") # Magically gets the next batch
                     final_accuracy += accuracy.eval(feed_dict={x: epoch_x, y: epoch_y})
                 print("train accuracy %", final_accuracy / int(len(data_formatter.x_train)/batch_size) * 100)
+                saver.save(sess, "model/ann")
 
 train_network(x)
