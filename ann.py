@@ -22,7 +22,8 @@ data_formatter.load_formatted_data("900_no_noise_binary_equalize")
 #data_formatter.normalize(-1.5, 1.5)
 #data_formatter.center_vertical()
 data_formatter.split_training_testing(0.3)
-
+print(len(data_formatter.x_test))
+print(len(data_formatter.x_train))
 
 
 #constants

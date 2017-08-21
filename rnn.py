@@ -113,8 +113,8 @@ if __name__ == "__main__":
 	#data_formatter.equalize_data()
 	data_formatter = Data_Formatter()
 	data_formatter.load_formatted_data("900_no_noise_binary_equalize")
-	data_formatter.shuffle()
-	data_formatter.normalize(-1.5, 1.5)
+	#data_formatter.shuffle()
+	#data_formatter.normalize(-1.5, 1.5)
 	#data_formatter.center_vertical()
 	data_formatter.split_training_testing(0.3)
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 	batch_size = int(len(data_formatter.x_test)/100)
 
 
-	rnn_network = RNN(learning_rate=1, n_input=1, n_state=200, n_step=900, n_output=2, name="binary_classification")
+	rnn_network = RNN(learning_rate=0.01, n_input=1, n_state=200, n_step=900, n_output=2, name="binary_classification")
 	with tf.Session() as sess:
 		rnn_network.setup(sess)
 		#rnn_network.load(sess, name="binary_classification-0", learning_rate=0.001)
