@@ -11,13 +11,14 @@ import os
 from plot_signal import plot_signal
 
 #Categories 17
+abnormal = ['A']
 categories = ['N','A']
 colours = ['#3cb44b', '#e6194b', '#ffe119', '#0082c8', '#f58231', '#911eb4', '#46f0f0', '#f032e6'
             ,'#d2f53c', '#fabebe', '#008080', '#e6beff', '#aa6e28', '#fffac8', '#800000']
 
 #HyperParameters
 signalType = "V1"
-hz = 360
+hz = 900
 downsample = 300
 SecondsWanted = 2500 #Seconds of data wanted
 dynamicPeak = False # If true, the ecg slice will pick based on if the highest or lowest point is greater
@@ -67,8 +68,25 @@ def sort_annotations():
         try:
             annotationArray[i-1][1] = np.identity(len(categories))[categories.index(annotationArray[i-1][1])]
         except ValueError:
-            # if annotation isn't in the accepted categories
-            annotationArray[i-1][1] = [-1]
+            if(annotationArray[i-1][1] in abnormal):
+                annotationArray[i-1][1] = np.identity(len(categories))[1]
+            else:
+                annotationArray[i-1][1] = [-1]
+
+def slice_annotations(signals, annotations):
+    x = []
+    y = []
+    for label in annotations:
+        index = label[0]
+        label = label[1]
+
+        high = int(index + hz/2)
+        low = int(index - hz/2)
+
+        if(high > len(signals)):
+            high = len(signals)
+        if(low < 0):
+            low = 0
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -77,7 +95,7 @@ Annoations two-tuple [[index, type], [index, type] ... [index, type]]
 Find highest peak of signal within 300hz of annotation index
 Slice peak 300hz either way
 '''
-def slice_peaks(signals, annotations):
+def slice_peaks(signals, annotations, peak=False):
         # Lists to contain new values
         x = []
         y = []
@@ -99,10 +117,13 @@ def slice_peaks(signals, annotations):
             signalRange = [signals[i][signalIndex] for i in range(low, high)]
 
             # find highest peak index
-            maxIndex = np.argmax(signalRange)
-            minIndex = np.argmin(signalRange)
+            maxIndex = label[0]
+            minIndex = label[0]
             average = np.mean(signalRange)
-            if(abs(signalRange[maxIndex] - average) < abs(signalRange[minIndex] - average)):
+            if(maxIndex < 0):
+                maxIndex = 0
+            #average = 0
+            if(abs(signalRange[int(maxIndex)] - average) < abs(signalRange[int(minIndex)] - average)):
                 peakIndex = minIndex
             else:
                 peakIndex = maxIndex
@@ -113,6 +134,8 @@ def slice_peaks(signals, annotations):
                     peakIndex = minIndex
 
             peakIndex += low
+            if(peak == False):
+                peakIndex = index
             high = int(peakIndex + hz/2)
             low = int(peakIndex - hz/2)
 

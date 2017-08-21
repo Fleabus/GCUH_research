@@ -112,11 +112,12 @@ if __name__ == "__main__":
 	#data_formatter.noise_generator(0.1)
 	#data_formatter.equalize_data()
 	data_formatter = Data_Formatter()
-	data_formatter.load_formatted_data("360_no_noise_binary_equalize")
+	data_formatter.load_formatted_data("900_no_noise_binary_equalize")
 	data_formatter.shuffle()
-	data_formatter.split_training_testing(0.1)
-	data_formatter.equalize_data()
-	print(len(data_formatter.x_train))
+	data_formatter.normalize(-1.5, 1.5)
+	#data_formatter.center_vertical()
+	data_formatter.split_training_testing(0.3)
+
 	norm = 0
 	abnorm = 0
 	for y in data_formatter.y_test:
@@ -130,13 +131,13 @@ if __name__ == "__main__":
 	print(abnorm)
 	#Hyperparameters
 	epochs = 100
-	batch_size = int(len(data_formatter.x_test)/10)
+	batch_size = int(len(data_formatter.x_test)/100)
 
 
-	rnn_network = RNN(n_input=1, n_state=100, n_step=360, n_output=2, name="binary_classification")
+	rnn_network = RNN(learning_rate=1, n_input=1, n_state=200, n_step=900, n_output=2, name="binary_classification")
 	with tf.Session() as sess:
-		#rnn_network.setup(sess)
-		rnn_network.load(sess, name="binary_classification-0", learning_rate=0.001)
+		rnn_network.setup(sess)
+		#rnn_network.load(sess, name="binary_classification-0", learning_rate=0.001)
 		for i in range(epochs):
 		    epoch_err = 0.0
 		    # Run training loop
@@ -155,6 +156,7 @@ if __name__ == "__main__":
 
 		    total_accuracy = 0.0
 		    output_errs = np.zeros(2)
+		    output_corr = np.zeros(2)
 		    for j in range(int(len(data_formatter.x_test)/batch_size)):
 		        batch_x, batch_y = data_formatter.get_batch(batch_size, j, "test")
 		        # Convert shape [batch * steps] -> [batch * steps * inputs]
@@ -162,6 +164,7 @@ if __name__ == "__main__":
 		        batch_x = np.expand_dims(batch_x, axis=2)
 		        # Run test over batc
 		        acc, corr = rnn_network.test(batch_x, batch_y)
+		        output_correct = np.add(output_corr, np.sum([batch_y[x] for x in range(len(corr)) if corr[x] == True], axis=0))
 		        output_errs = np.add(output_errs, np.sum([batch_y[x] for x in range(len(corr)) if corr[x] == False], axis=0))
 		        total_accuracy = total_accuracy + acc
-		    print("\nError:", epoch_err, "\nAccuracy:", total_accuracy / (len(data_formatter.x_test)/batch_size), "\nCategory Errors:", output_errs, "\n")
+		    print("\nError:", epoch_err, "\nAccuracy:", total_accuracy / (len(data_formatter.x_test)/batch_size), "\nCategory Errors:", output_errs, "\nCategory Successes:", output_correct, "\n")

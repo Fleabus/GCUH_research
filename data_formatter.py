@@ -88,6 +88,7 @@ class Data_Formatter:
         self.y = np.concatenate((self.y[0], self.y[1]), axis=0)
 
     def average_in_window(self, window_size, stride=0):
+        self.x = self.x[:100]
         new_x = []
         for x_val in self.x:
             new_x_val = []
@@ -140,6 +141,7 @@ class Data_Formatter:
     # Centers data vertically using the mean
     def center_vertical(self):
         x_mean = np.mean(self.x, axis=1)
+        x_mean = np.expand_dims(x_mean, axis=1)
         self.x = self.x - x_mean
 
     def normalize(self, min, max):
