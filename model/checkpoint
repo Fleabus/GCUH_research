@@ -1,2 +1,2 @@
-model_checkpoint_path: "binary_classification-0-0"
-all_model_checkpoint_paths: "binary_classification-0-0"
+model_checkpoint_path: "ann"
+all_model_checkpoint_paths: "ann"

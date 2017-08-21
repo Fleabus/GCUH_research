@@ -1,11 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from data_formatter import Data_Formatter
 
-def get_heatmap_values(x):
-    y = [n[0] - n[1] for n in x]
-    normalize = [(n - (-1)) / (1 - (-1)) for n in y]
-    return normalize
+y = np.array([
+    [1, 0],
+    [0, 1],
+    [1, 0],
+    [0, 1]
+])
 
-x = np.array([[0.2, 0.9], [0.9, 0.2]])
-mean = np.mean(x, axis=1)
-print(x - mean)
+x = np.array([
+    [1],
+    [2],
+    [3],
+    [4]
+])
+
+
+print(np.mean(x, axis=1))

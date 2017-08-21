@@ -14,10 +14,10 @@ def multicolored_lines():
 def plot_signal(x, y, z=None):
     fig, ax = plt.subplots()
     lc = colorline(x, y, z)
-    plt.xlim(0, 600)
+    plt.xlim(0, 1200)
     plt.ylim(y.min(), y.max())
     mng = plt.get_current_fig_manager()
-    fig.set_size_inches(10, 5)
+    fig.set_size_inches(15, 5)
 
 def colorline(
         x, y, z=None, cmap='RdYlGn', norm=plt.Normalize(0.0, 1.0),
@@ -29,7 +29,7 @@ def colorline(
     Optionally specify colors in the array z
     Optionally specify a colormap, a norm function and a line width
     """
-    
+
 
     # Special case if a single number:
     # to check for numerical input -- this is a hack
