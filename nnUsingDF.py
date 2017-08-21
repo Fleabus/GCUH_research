@@ -10,9 +10,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print("Importing Data")
 signals, labels = [], []
-signal = np.load("data/features_MLII.npy")
-label = np.load("data/labels_MLII.npy")
-
+signals = np.load("data/features_MLII.npy")
+labels = np.load("data/labels_MLII.npy")
+'''
 def checkLabels():
     countNorm = 0
     countAb = 0
@@ -36,7 +36,7 @@ def checkLabels():
     return newLabels, newSignals
 
 labels, signals = checkLabels()
-
+'''
 
 def createBatch(signals, labels, noBatch):
     allSignals = np.array_split(signals, noBatch)
@@ -88,13 +88,34 @@ with tf.name_scope("evaluation"):
     tf.summary.scalar("accuracy", accuracy)
 
 #Run Session
+df = Data_Formatter()
+
+print("ct", df.countType(labels))
+df.assign_data(signals, labels)
+
+print("S, L: ", len(labels), len(signals))
+print("ct", df.countType(df.y))
+df.equalize_data()
+print("ct", df.countType(df.y))
+df.split_training_testing()
+print("ytest", df.countType(df.y_test))
+print("ytrain", df.countType(df.y_train))
+
 sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 merged = tf.summary.merge_all()
+#logdir = "tensorboard" + now.strftime("%Y%m%d-%H%M%S") + "/"
 
+
+summary, acc = sess.run([merged, accuracy], feed_dict={x: df.x_test, y_: df.y_test})
+print("ACCURACY", acc)
+for i in range(0, 10):
+    sess.run(train_step, feed_dict={x: df.x_train, y_: df.y_train})
+    summary, acc, ce = sess.run([merged, accuracy, cross_entropy], feed_dict={x: df.x_test, y_: df.y_test})
+    print("accuracy: ", acc, " ce:", ce)
 #Main
-
+'''
 train_writer = tf.summary.FileWriter('tensorboard' + '/' + now.strftime("%Y%m%d-%H%M%S"), sess.graph)
 signalTrainSet, labelTrainSet, signalTestSet, labelTestSet = splitTestTrainSets(5)
 signalTrainSet, labelTrainSet = createBatch(signalTrainSet, labelTrainSet, 20)
@@ -104,7 +125,8 @@ print("ACCURACY", acc)
 for i in range(0, len(signalTrainSet)):
     print("Training Batch ", i, "of ", len(signalTrainSet))
     sess.run(train_step, feed_dict={x: signalTrainSet[i], y_: labelTrainSet[i]})
-    summary, acc, ce = sess.run([merged, accuracy, cross_entropy], feed_dict={x: signalTestSet, y_: labelTestSet})
-    print("Batch ", i, " accuracy: ", acc, " ce:", ce)
+    summary, acc = sess.run([merged, accuracy], feed_dict={x: signalTestSet, y_: labelTestSet})
+    print("Batch ", i, " accuracy: ", acc)
     train_writer.add_summary(summary, i)
 train_writer.close()
+    '''

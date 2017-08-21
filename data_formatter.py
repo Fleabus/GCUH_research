@@ -11,6 +11,7 @@ class Data_Formatter:
     def assign_data(self, x_data, y_data):
         self.x = x_data
         self.y = y_data
+        return self.x, self.y
 
     def shuffle(self):
         s = np.arange(self.x.shape[0])
@@ -147,7 +148,7 @@ class Data_Formatter:
         self.x = (self.x-min)/(max-min)
 
     #Counts number of normal and abnormal and returns
-    def countType(arr):
+    def countType(self, arr):
         countNorm = 0
         countAb = 0
         for i in range(0, len(arr)):

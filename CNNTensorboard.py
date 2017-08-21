@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
+from data_formatter import Data_Formatter
 now = datetime.now()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -10,7 +11,7 @@ print("Importing Data")
 signals, labels = [], []
 signals = np.load("data/features_MLII.npy")
 labels = np.load("data/labels_MLII.npy")
-
+'''
 def checkLabels(label, signal):
     countNorm = 0
     countAb = 0
@@ -43,7 +44,7 @@ def countType(arr):
         else:
             countAb += 1
     return countNorm, countAb
-
+'''
 def getSome(number):
     la = []
     sa = []
@@ -51,10 +52,20 @@ def getSome(number):
     sa = signal[0:number]
     return la, sa
 
-labels, signals = checkLabels(labels, signals)
+#labels, signals = checkLabels(labels, signals)
 #labels, signals = getSome(5000)
-print(countType(labels))
+df = Data_Formatter()
+
+print("ct", df.countType(labels))
+df.assign_data(signals, labels)
+
 print("S, L: ", len(labels), len(signals))
+print("ct", df.countType(df.y))
+df.equalize_data()
+print("ct", df.countType(df.y))
+df.split_training_testing()
+print("ytest", df.countType(df.y_test))
+print("ytrain", df.countType(df.y_train))
 
 
 
@@ -68,16 +79,14 @@ def splitTestTrainSets(testPercentage):
     trainNo = 100 - testNo
 
     #spliting array evenly by 100
-    splitSignalArr = np.array_split(signals, 10)
-    splitLabelArr = np.array_split(labels, 10)
+    splitSignalArr = np.array_split(signals, 100)
+    splitLabelArr = np.array_split(labels, 100)
 
     #Seperating training and testing set
     signalTrainSet = np.concatenate(splitSignalArr[:trainNo])
     labelTrainSet = np.concatenate(splitLabelArr[:trainNo])
     signalTestSet = np.concatenate(splitSignalArr[trainNo:])
     labelTestSet = np.concatenate(splitLabelArr[trainNo:])
-    print(len(signalTestSet))
-    print(len(signalTrainSet))
     return signalTrainSet, labelTrainSet, signalTestSet, labelTestSet
 
 def weight_variable(shape):
@@ -108,12 +117,11 @@ with tf.name_scope("ConvLayer1"):
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
     h_pool1 = max_pool_1x2(h_conv1)
 
-print(h_pool1.get_shape())
+
 with tf.name_scope("FCLayer1"):
     W_fc1 = weight_variable([1 * 180 * 32, 1024])
     b_fc1 = bias_variable([1024])
     h_pool1_flat = tf.reshape(h_pool1, [-1, 1*180*32])
-    print(h_pool1_flat.get_shape())
     h_fc1 = tf.nn.relu(tf.matmul(h_pool1_flat, W_fc1) + b_fc1)
 
 with tf.name_scope("output"):
@@ -121,13 +129,11 @@ with tf.name_scope("output"):
     b_fc2 = bias_variable([2])
 
 y = tf.matmul(h_fc1, W_fc2) + b_fc2
-print(y.get_shape())
-print(y_.get_shape())
 
 #TRAINING
 with tf.name_scope("training"):
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-    train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
+    train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cross_entropy)
 
 #Evaluating Model
 with tf.name_scope("evaluation"):
@@ -142,8 +148,19 @@ init = tf.global_variables_initializer()
 sess.run(init)
 merged = tf.summary.merge_all()
 #logdir = "tensorboard" + now.strftime("%Y%m%d-%H%M%S") + "/"
+
 train_writer = tf.summary.FileWriter('tensorboard' + '/' + now.strftime("%Y%m%d-%H%M%S"), sess.graph)
 
+#Main
+summary, acc = sess.run([merged, accuracy], feed_dict={x: df.x_test, y_: df.y_test})
+print("ACCURACY", acc)
+for i in range(0, 10):
+    sess.run(train_step, feed_dict={x: df.x_train, y_: df.y_train})
+    summary, acc = sess.run([merged, accuracy], feed_dict={x: df.x_test, y_: df.y_test})
+    print("accuracy: ", acc)
+train_writer.add_summary(summary)
+train_writer.close()
+'''
 #Main
 signalTrainSet, labelTrainSet, signalTestSet, labelTestSet = splitTestTrainSets(5)
 signalTrainSet, labelTrainSet = createBatch(signalTrainSet, labelTrainSet, 20)
@@ -157,3 +174,4 @@ for i in range(0, len(signalTrainSet)):
     print("Batch ", i, " accuracy: ", acc)
     train_writer.add_summary(summary, i)
 train_writer.close()
+'''
