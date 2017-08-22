@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.collections as mcoll
+from matplotlib.widgets import Slider
+figure = False
 
 def multicolored_lines():
     """
@@ -12,12 +14,12 @@ def multicolored_lines():
     plot_signal(x, y)
 
 def plot_signal(x, y, z=None):
-    fig, ax = plt.subplots()
+    figure, ax = plt.subplots()
     lc = colorline(x, y, z)
     plt.xlim(0, 1200)
     plt.ylim(y.min(), y.max())
     mng = plt.get_current_fig_manager()
-    fig.set_size_inches(15, 5)
+    figure.set_size_inches(15, 6)
 
 def colorline(
         x, y, z=None, cmap='RdYlGn', norm=plt.Normalize(0.0, 1.0),

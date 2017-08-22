@@ -24,6 +24,7 @@ class Classifier:
         self.data = [float(x.replace('\\n', '').strip()) for x in content]
 
     '''
+    Model requires an 'x:0' and 'run:0' in order to successfully load
     Loads model and assigns x_placeholder, run, and input variables
     Requires the model to be in the folder 'model/'
     '''
@@ -85,12 +86,13 @@ if __name__ == '__main__':
     # parameters
     inputval = 900
     runlimit = 10000
-    filename = "1131314/new9.txt"
+    filename = "1032_1.asc"
     modelname = "ann"
     # load data and model
     classifier  = Classifier()
     classifier.load_data(filename)
     classifier.load_model(modelname, inputval)
-    classifier.run_model(10000)
+    # Run model
+    classifier.run_model(runlimit)
     # Create a graph of the final output
     classifier.graph_output()

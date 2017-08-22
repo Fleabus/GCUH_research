@@ -33,7 +33,7 @@ class RNN:
 	def setup(self, sess):
 		self.sess = sess
 		#Placeholders
-		self.x = tf.placeholder("float", [None, self.n_step, self.n_input], name="x_place")
+		self.x = tf.placeholder("float", [None, self.n_step, self.n_input], name="x")
 		self.y = tf.placeholder("float", [None, self.n_output], name="y_place")
 		# Weights and biases
 		self.w1 = tf.Variable(tf.truncated_normal([self.n_state, 100], stddev=0.1), name="w1")
@@ -61,7 +61,7 @@ class RNN:
 		saver.restore(sess, tf.train.latest_checkpoint('model/'))
 		# Assign the graph to all variables
 		graph = tf.get_default_graph()
-		self.x = graph.get_tensor_by_name("x_place:0")
+		self.x = graph.get_tensor_by_name("x:0")
 		self.y = graph.get_tensor_by_name("y_place:0")
 		self.w1 = graph.get_tensor_by_name("w1:0")
 		self.b1 = graph.get_tensor_by_name("b1:0")
@@ -89,7 +89,7 @@ class RNN:
 		outputs, _, _  = rnn.static_bidirectional_rnn(lstm_fw_cell, lstm_bw_cell, x, dtype=tf.float32)
 		# we only want the last output
 		fc1_out = tf.nn.tanh(tf.matmul(outputs[-1], self.w1) + self.b1)
-		output = tf.matmul(fc1_out, self.w2) + self.b2
+		output = tf.nn.relu(tf.matmul(fc1_out, self.w2) + self.b2, name="run")
 		return output
 
 	def test(self, features, labels):
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 	data_formatter = Data_Formatter()
 	data_formatter.load_formatted_data("900_no_noise_binary_equalize")
 	#data_formatter.shuffle()
-	#data_formatter.normalize(-1.5, 1.5)
+	data_formatter.normalize(-1.5, 1.5)
 	#data_formatter.center_vertical()
 	data_formatter.split_training_testing(0.3)
 

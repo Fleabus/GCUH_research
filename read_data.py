@@ -73,20 +73,6 @@ def sort_annotations():
             else:
                 annotationArray[i-1][1] = [-1]
 
-def slice_annotations(signals, annotations):
-    x = []
-    y = []
-    for label in annotations:
-        index = label[0]
-        label = label[1]
-
-        high = int(index + hz/2)
-        low = int(index - hz/2)
-
-        if(high > len(signals)):
-            high = len(signals)
-        if(low < 0):
-            low = 0
 
 '''
 Signals two-tuple [[sig1, sig2], [sig1, sig2] ... [sig1, sig2]]
@@ -167,7 +153,6 @@ def plotSignal(features, labels, alpha_value=0.5):
 def retrieveData():
     return signalArray, annotationArray
 
-
 def binarySegment(x, y):
     x_norm = []
     y_norm = []
@@ -236,7 +221,7 @@ if __name__ == '__main__':
     print(len(x_abnorm))
     for i in range(len(categories)):
         ps.append(mpatches.Patch(color=colours[i], label=categories[i]))
-        plotSignal([x[j] for j in range(len(x)) if y[j][i] == 1][:30], [n for n in y if n[i] == 1][:30], alpha_value=0.7)
+        plotSignal([x[j] for j in range(len(x)) if y[j][i] == 1][50:100], [n for n in y if n[i] == 1][50:100], alpha_value=0.7)
     plt.legend(handles=ps)
     plt.show()
 

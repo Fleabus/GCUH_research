@@ -11,7 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 #============================================================#
 #                                                            #
 #   Artificial Neural Network                                #
-#   Using the adult data to predict income                   #
+#   Used to classify heart beats                             #
 #   - Matthew Lee-Mattner                                    #
 #                                                            #
 #============================================================#

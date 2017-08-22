@@ -12,6 +12,7 @@ if __name__ == "__main__":
     print(len(data_formatter.y))
     #data_formatter.noise_generator(0.01)
     data_formatter.equalize_data()
+    #data_formatter.local_normalize()
 
     data_formatter.save_formatted_data("900_no_noise_binary_equalize")
     #data_formatter.shuffle()

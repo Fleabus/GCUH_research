@@ -147,6 +147,12 @@ class Data_Formatter:
     def normalize(self, min, max):
         self.x = (self.x-min)/(max-min)
 
+    '''
+    Normalizes for each beat
+    '''
+    def local_normalize(self):
+        self.x = [(x - np.min(x))/(np.max(x) - np.min(x)) for x in np.array(self.x)]
+
     # Generates a random amount of noise
     # scale = the deviation from the original
     # versions = the amount of data made
